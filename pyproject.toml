@@ -1,6 +1,6 @@
 [project]
 name = "dynastyai"
-version = "0.1.0"
+version = "0.2.0"
 description = "An AI-powered pipeline for generating short Chinese historical dramas from a simple story idea."
 requires-python = ">=3.11"
 dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "httpx>=0.27,<1", "pydantic-settings>=2.6,<3"]

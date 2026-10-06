@@ -16,17 +16,19 @@ function setBusy(value) {
     : "Generate storyboard ↗";
   $("save").disabled = value || !project;
   $("import").disabled = value;
+  $("refresh-prompts").disabled = value || !project;
+  $("generate-all").disabled = value || !project;
   $("title").disabled = value;
   $("scenes").setAttribute("aria-busy", String(value));
 }
 
-async function api(path, body) {
+async function api(path, body, extraHeaders = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 310000);
   try {
     const response = await fetch(path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...extraHeaders },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -55,23 +57,226 @@ function summary() {
     `${project.scenes.length} scenes · ${total}s / ${project.request.target_duration}s`;
 }
 
+function markPromptsStale() {
+  markAssetsStale();
+  status(
+    "Scene details changed. Click Refresh prompts before generating images.",
+    "warning",
+  );
+}
+
+function markAssetsStale() {
+  if (!project) return;
+  project.scenes.forEach((scene) => {
+    if (scene.image_asset) {
+      const message = $(`scene-status-${scene.scene_number}`);
+      if (message) {
+        message.textContent =
+          "This image may reflect an older prompt. Review and regenerate it.";
+        message.className = "scene-status warning";
+      }
+    }
+  });
+}
+
+function newCharacter(name) {
+  return {
+    id: `character-${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`,
+    name,
+    role: "Role unspecified; review before image generation",
+    approximate_age: "Age unspecified; review before image generation",
+    appearance: "Appearance unspecified; review before image generation",
+    facial_features:
+      "Facial features unspecified; review before image generation",
+    hairstyle: "Hairstyle unspecified; review before image generation",
+    costume: "Costume unspecified; review before image generation",
+    accessories: "Accessories unspecified; review before image generation",
+    personality_visual_impression:
+      "Visual impression unspecified; review before image generation",
+  };
+}
+
+function bibleField(
+  labelText,
+  value,
+  onChange,
+  { multiline = false, id = "" } = {},
+) {
+  const wrap = document.createElement("div");
+  const label = document.createElement("label");
+  const control = document.createElement(multiline ? "textarea" : "input");
+  control.id = id || `bible-${++field.counter}`;
+  label.htmlFor = control.id;
+  label.textContent = labelText;
+  control.value = value;
+  control.maxLength = multiline ? 1000 : 300;
+  if (multiline) control.rows = 2;
+  control.addEventListener("input", () => onChange(control.value));
+  wrap.append(label, control);
+  return wrap;
+}
+
+function renderBibles() {
+  $("characters").replaceChildren();
+  project.character_bible.forEach((character) => {
+    const card = document.createElement("div");
+    card.className = "character-card";
+    const heading = document.createElement("h3");
+    heading.textContent = `${character.name} · ${character.id}`;
+    card.append(heading);
+    const grid = document.createElement("div");
+    grid.className = "bible-grid";
+    const labels = {
+      name: "Name",
+      role: "Role",
+      approximate_age: "Approximate age",
+      appearance: "Appearance",
+      facial_features: "Facial features",
+      hairstyle: "Hairstyle",
+      costume: "Costume",
+      accessories: "Accessories",
+      personality_visual_impression: "Personality / visual impression",
+    };
+    Object.entries(labels).forEach(([key, label]) => {
+      grid.append(
+        bibleField(
+          `${character.id} ${label}`,
+          character[key],
+          (value) => {
+            if (key === "name") {
+              const previous = character.name;
+              project.scenes.forEach((scene) => {
+                scene.characters = scene.characters.map((name) =>
+                  name === previous ? value : name,
+                );
+                const sceneNames = $(`characters-${scene.scene_number}`);
+                if (sceneNames) sceneNames.value = scene.characters.join("\n");
+                scene.dialogue.forEach((line, index) => {
+                  if (line.character === previous) {
+                    line.character = value;
+                    const speaker = document.querySelector(
+                      `[aria-label="Scene ${scene.scene_number} dialogue ${index + 1} speaker"]`,
+                    );
+                    if (speaker) speaker.value = value;
+                  }
+                });
+              });
+              heading.textContent = `${value} · ${character.id}`;
+            }
+            character[key] = value;
+            markPromptsStale();
+          },
+          { multiline: !["name", "role", "approximate_age"].includes(key) },
+        ),
+      );
+    });
+    card.append(grid);
+    $("characters").append(card);
+  });
+  $("visual-style").replaceChildren();
+  const styleLabels = {
+    historical_era: "Historical era / dynasty",
+    visual_style: "Visual style",
+    lighting: "Lighting",
+    cinematography: "Cinematography",
+    color_mood: "Color mood",
+  };
+  Object.entries(styleLabels).forEach(([key, label]) => {
+    $("visual-style").append(
+      bibleField(
+        label,
+        project.visual_style[key],
+        (value) => {
+          project.visual_style[key] = value;
+          markPromptsStale();
+        },
+        { multiline: true },
+      ),
+    );
+  });
+  $("visual-style").append(
+    bibleField("Aspect ratio", project.visual_style.aspect_ratio, () => {}, {
+      id: "aspect-ratio",
+    }),
+  );
+  $("aspect-ratio").readOnly = true;
+}
+
+function renderImage(scene, container) {
+  container.replaceChildren();
+  if (!scene.image_asset) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "image-placeholder";
+    placeholder.textContent = "9:16 scene image awaits";
+    container.append(placeholder);
+    return;
+  }
+  const image = document.createElement("img");
+  image.src = scene.image_asset.url;
+  image.alt = `Scene ${scene.scene_number} ${scene.image_asset.is_mock ? "mock placeholder, not AI generated" : "generated keyframe"}`;
+  image.loading = "lazy";
+  const caption = document.createElement("p");
+  caption.className = "image-caption";
+  caption.textContent = scene.image_asset.is_mock
+    ? "MOCK PLACEHOLDER · NOT AI GENERATED"
+    : `${scene.image_asset.model} · ${scene.image_asset.width}×${scene.image_asset.height}`;
+  image.addEventListener("error", () => {
+    caption.textContent = "Image file missing on this machine. Generate again.";
+  });
+  container.append(image, caption);
+}
+
+async function generateImage(scene) {
+  const message = $(`scene-status-${scene.scene_number}`);
+  message.textContent = "Generating image…";
+  try {
+    const result = await api(
+      `/api/images/scenes/${scene.scene_number}`,
+      project,
+    );
+    scene.image_asset = result.image_asset;
+    renderImage(scene, $(`scene-image-${scene.scene_number}`));
+    const button = $(`scene-generate-button-${scene.scene_number}`);
+    button.textContent = "Regenerate Image";
+    button.setAttribute(
+      "aria-label",
+      `Regenerate Image for scene ${scene.scene_number}`,
+    );
+    message.textContent = scene.image_asset.is_mock
+      ? "Mock placeholder ready. No AI image was generated."
+      : "Image generated and saved locally.";
+    message.className = "scene-status";
+    return true;
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "scene-status error";
+    return false;
+  }
+}
+
 function field(
   labelText,
   value,
   onChange,
-  { wide = false, rows = 2, maxLength = 4000 } = {},
+  {
+    wide = false,
+    rows = 2,
+    maxLength = 4000,
+    eventName = "input",
+    id = "",
+  } = {},
 ) {
   const wrap = document.createElement("div");
   if (wide) wrap.className = "wide";
   const label = document.createElement("label");
   const control = document.createElement("textarea");
-  control.id = `field-${++field.counter}`;
+  control.id = id || `field-${++field.counter}`;
   label.htmlFor = control.id;
   label.textContent = labelText;
   control.value = value;
   control.rows = rows;
   control.maxLength = maxLength;
-  control.addEventListener("input", () => onChange(control.value));
+  control.addEventListener(eventName, () => onChange(control.value));
   wrap.append(label, control);
   return wrap;
 }
@@ -134,6 +339,7 @@ function render() {
   $("empty").hidden = true;
   $("project").hidden = false;
   $("title").value = project.title;
+  renderBibles();
   $("scenes").replaceChildren();
   project.scenes.forEach((scene) => {
     const article = document.createElement("article");
@@ -181,7 +387,20 @@ function render() {
             .split("\n")
             .map((name) => name.trim())
             .filter(Boolean);
+          scene.character_ids = scene.characters.map((name) => {
+            let entry = project.character_bible.find(
+              (character) => character.name === name,
+            );
+            if (!entry) {
+              entry = newCharacter(name);
+              project.character_bible.push(entry);
+              renderBibles();
+            }
+            return entry.id;
+          });
+          markPromptsStale();
         },
+        { eventName: "change", id: `characters-${scene.scene_number}` },
       ),
     );
     const dialogue = document.createElement("div");
@@ -198,6 +417,7 @@ function render() {
         scene.visual_prompt,
         (v) => {
           scene.visual_prompt = v;
+          markPromptsStale();
         },
         { wide: true },
       ),
@@ -206,19 +426,112 @@ function render() {
         scene.camera_description,
         (v) => {
           scene.camera_description = v;
+          markPromptsStale();
         },
         { wide: true, maxLength: 2000 },
       ),
     );
-    article.append(header, grid);
+    grid.append(
+      field(
+        `Scene ${scene.scene_number} final image prompt (sent verbatim)`,
+        scene.final_image_prompt,
+        (value) => {
+          scene.final_image_prompt = value;
+          markAssetsStale();
+        },
+        { wide: true, rows: 8, maxLength: 16000 },
+      ),
+    );
+    const imageArea = document.createElement("div");
+    imageArea.className = "scene-image-area";
+    const preview = document.createElement("div");
+    preview.className = "image-preview";
+    preview.id = `scene-image-${scene.scene_number}`;
+    renderImage(scene, preview);
+    const controls = document.createElement("div");
+    controls.className = "image-controls";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "secondary";
+    button.id = `scene-generate-button-${scene.scene_number}`;
+    button.textContent = scene.image_asset
+      ? "Regenerate Image"
+      : "Generate Image";
+    button.setAttribute(
+      "aria-label",
+      `${button.textContent} for scene ${scene.scene_number}`,
+    );
+    button.addEventListener("click", async () => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        if (await generateImage(scene)) {
+          button.textContent = "Regenerate Image";
+          button.setAttribute(
+            "aria-label",
+            `Regenerate Image for scene ${scene.scene_number}`,
+          );
+        }
+      } finally {
+        setBusy(false);
+      }
+    });
+    const imageStatus = document.createElement("p");
+    imageStatus.className = "scene-status";
+    imageStatus.id = `scene-status-${scene.scene_number}`;
+    controls.append(button, imageStatus);
+    imageArea.append(preview, controls);
+    article.append(header, grid, imageArea);
     $("scenes").append(article);
   });
   summary();
   $("save").disabled = false;
+  $("refresh-prompts").disabled = false;
+  $("generate-all").disabled = false;
 }
 
 $("title").addEventListener("input", () => {
   if (project) project.title = $("title").value;
+});
+
+$("refresh-prompts").addEventListener("click", async () => {
+  if (!project || busy) return;
+  if (
+    !window.confirm(
+      "Refresh all final prompts? This replaces manual edits to those prompts.",
+    )
+  )
+    return;
+  setBusy(true);
+  try {
+    project = await api("/api/projects/prompts/refresh", project);
+    render();
+    markAssetsStale();
+    status(
+      "Final prompts refreshed. Review them and regenerate existing images if needed.",
+    );
+  } catch (error) {
+    status(`Cannot refresh prompts: ${error.message}`, "error");
+  } finally {
+    setBusy(false);
+  }
+});
+
+$("generate-all").addEventListener("click", async () => {
+  if (!project || busy) return;
+  setBusy(true);
+  let completed = 0;
+  try {
+    for (const scene of project.scenes) {
+      if (await generateImage(scene)) completed += 1;
+    }
+    status(
+      `${completed} of ${project.scenes.length} scene images ready. Save JSON to preserve their asset references.`,
+      completed === project.scenes.length ? "" : "warning",
+    );
+  } finally {
+    setBusy(false);
+  }
 });
 $("story-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -239,7 +552,9 @@ $("story-form").addEventListener("submit", async (event) => {
   setBusy(true);
   status("Building your scenes. This may take a moment…");
   try {
-    const next = await api("/api/storyboards", request);
+    const next = await api("/api/storyboards", request, {
+      "X-DynastyAI-Version": "2",
+    });
     project = next;
     render();
     status(
@@ -298,11 +613,12 @@ $("file").addEventListener("change", async () => {
   try {
     if (file.size > 1024 * 1024)
       throw new Error("Please choose a JSON file smaller than 1 MB.");
-    const validated = await api(
-      "/api/projects/validate",
-      JSON.parse(await file.text()),
-    );
-    project = validated;
+    const original = JSON.parse(await file.text());
+    const validated = await api("/api/projects/validate", original);
+    project =
+      validated.schema_version === "1.0"
+        ? await api("/api/projects/migrate", validated)
+        : validated;
     $("idea").value = project.request.story_idea;
     $("genre").value = project.request.genre;
     $("language").value = project.request.output_language;
@@ -322,9 +638,12 @@ $("file").addEventListener("change", async () => {
     durationSelect.value = project.request.target_duration;
     render();
     status(
-      project.generation_mode === "demo"
-        ? "Demo template project opened."
-        : "Project opened. Your edits are ready.",
+      project.migrated_from === "1.0"
+        ? "Phase 1 project migrated to v2. Review unspecified Character Bible details before image generation."
+        : project.generation_mode === "demo"
+          ? "Demo template project opened."
+          : "Project opened. Your edits are ready.",
+      project.migrated_from === "1.0" ? "warning" : "",
     );
   } catch (error) {
     status(`Cannot open project: ${error.message}`, "error");
@@ -363,4 +682,21 @@ fetch("/api/health")
     $("mode").textContent = "OFFLINE";
     $("config-note").textContent =
       "Cannot reach the backend. Start the server and reload this page.";
+  });
+
+fetch("/api/image-health")
+  .then((response) => {
+    if (!response.ok) throw new Error();
+    return response.json();
+  })
+  .then((data) => {
+    $("image-mode").textContent =
+      data.provider === "mock"
+        ? "MOCK MODE · Images are labeled placeholders, not AI generated."
+        : data.configured
+          ? "OPENAI IMAGES CONFIGURED · Generating an image may incur provider charges."
+          : "OPENAI IMAGES NEEDS IMAGE_API_KEY · Set it in the backend .env, or use IMAGE_PROVIDER=mock.";
+  })
+  .catch(() => {
+    $("image-mode").textContent = "Image provider status unavailable.";
   });

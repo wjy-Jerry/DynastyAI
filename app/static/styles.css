@@ -539,3 +539,153 @@ body.busy #project {
     transition: none;
   }
 }
+
+.workflow-map {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 13px 0;
+  margin: 18px 0 26px;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.workflow-map span {
+  color: var(--gold);
+  margin: 0 5px;
+}
+.bible-section {
+  margin: 0 0 30px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.bible-section > .note {
+  margin: 12px 0 18px;
+}
+.character-card {
+  background: #f7f6ef;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.character-card h3 {
+  font:
+    18px Georgia,
+    serif;
+  margin: 0 0 12px;
+}
+.bible-grid,
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+.bible-grid label,
+.style-grid label {
+  color: var(--muted);
+  font-size: 10px;
+}
+.bible-grid input,
+.bible-grid textarea,
+.style-grid textarea,
+.style-grid input {
+  background: var(--white);
+}
+.style-grid {
+  margin-bottom: 6px;
+}
+.image-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.compact {
+  width: auto;
+  margin: 0;
+  padding: 9px 12px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.image-mode {
+  background: #edf1e8;
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--green);
+}
+.scene-image-area {
+  display: flex;
+  align-items: start;
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-top: 18px;
+}
+.image-preview {
+  width: 180px;
+  flex: 0 0 180px;
+}
+.image-preview img,
+.image-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9/16;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #e8eadf;
+}
+.image-placeholder {
+  display: grid;
+  place-items: center;
+  padding: 15px;
+  text-align: center;
+  font:
+    italic 16px Georgia,
+    serif;
+  color: var(--muted);
+}
+.image-caption {
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 0.4px;
+  line-height: 1.5;
+}
+.image-controls {
+  flex: 1;
+  min-width: 0;
+}
+.scene-status {
+  color: var(--green);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.scene-status.error {
+  color: #923829;
+}
+.scene-status.warning {
+  color: #805b19;
+}
+@media (max-width: 1000px) {
+  .image-section-head {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 720px) {
+  .bible-grid,
+  .style-grid {
+    grid-template-columns: 1fr;
+  }
+  .scene-image-area {
+    flex-direction: column;
+  }
+  .image-section-head .actions {
+    flex-wrap: wrap;
+  }
+  .workflow-map {
+    font-size: 9px;
+  }
+}

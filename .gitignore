@@ -13,3 +13,4 @@ playwright-report/
 dist/
 build/
 *.egg-info/
+data/assets/

@@ -17,7 +17,7 @@
       <a class="brand" href="/" aria-label="DynastyAI home"
         ><span class="seal">朝</span> Dynasty<span>AI</span></a
       >
-      <span class="phase">PHASE 01 <span>·</span> STORYBOARD STUDIO</span>
+      <span class="phase">PHASE 02 <span>·</span> VISUAL STORY STUDIO</span>
       <span id="mode" class="mode">Connecting…</span>
     </header>
     <main>
@@ -132,6 +132,56 @@
               </div>
               <span id="summary"></span>
             </div>
+            <div class="workflow-map" aria-label="Production workflow">
+              Story brief <span>→</span> Storyboard <span>→</span> Character
+              Bible <span>→</span> Visual Style <span>→</span> Scene Images
+            </div>
+            <section class="bible-section" aria-labelledby="characters-heading">
+              <div class="section-heading">
+                <span class="step">03</span>
+                <h2 id="characters-heading">Character Bible</h2>
+              </div>
+              <p class="note">
+                Edit recurring visual traits here. Each scene prompt carries the
+                full description for its characters.
+              </p>
+              <div id="characters"></div>
+            </section>
+            <section class="bible-section" aria-labelledby="style-heading">
+              <div class="section-heading">
+                <span class="step">04</span>
+                <h2 id="style-heading">Visual Style Bible</h2>
+              </div>
+              <p class="note">
+                A fictional, historically inspired setting. Review details
+                before claiming period accuracy.
+              </p>
+              <div id="visual-style" class="style-grid"></div>
+            </section>
+            <section class="bible-section" aria-labelledby="images-heading">
+              <div class="image-section-head">
+                <div class="section-heading">
+                  <span class="step">05</span>
+                  <h2 id="images-heading">Scene Images</h2>
+                </div>
+                <div class="actions">
+                  <button id="refresh-prompts" class="secondary" type="button">
+                    Refresh prompts</button
+                  ><button
+                    id="generate-all"
+                    class="primary compact"
+                    type="button"
+                  >
+                    Generate All Scene Images
+                  </button>
+                </div>
+              </div>
+              <p class="note">
+                Final prompts are editable and sent verbatim. Refresh after
+                changing scene direction, character identities, or visual style.
+              </p>
+              <p id="image-mode" class="image-mode"></p>
+            </section>
             <div id="scenes"></div>
           </div>
         </section>
@@ -140,7 +190,9 @@
         <span
           >DynastyAI <span class="muted">/</span> Imagine the past. Create the
           story.</span
-        ><span>IDEA → STORYBOARD <span class="muted">→ VIDEO</span></span>
+        ><span
+          >IDEA → STORYBOARD → IMAGES <span class="muted">→ VIDEO</span></span
+        >
       </footer>
     </main>
   </body>
