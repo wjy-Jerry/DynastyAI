@@ -1,0 +1,12 @@
+{
+  "name": "dynastyai-browser-tests",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "format:check": "prettier --check app/static e2e playwright.config.js package.json package-lock.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "prettier": "^3.9.9"
+  }
+}

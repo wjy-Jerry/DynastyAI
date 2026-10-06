@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#141c19" />
+    <title>DynastyAI — Storyboard Studio</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141c19'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-size='42' fill='%23ddbb75'%3E朝%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" type="module"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="DynastyAI home"
+        ><span class="seal">朝</span> Dynasty<span>AI</span></a
+      >
+      <span class="phase">PHASE 01 <span>·</span> STORYBOARD STUDIO</span>
+      <span id="mode" class="mode">Connecting…</span>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">A STORY WORTH TELLING</p>
+          <h1>From a spark.<br />To a <em>dynasty.</em></h1>
+          <p class="lede">
+            Shape your idea into a Chinese historical drama.<br />One scene at a
+            time.
+          </p>
+        </div>
+        <div class="ornament" aria-hidden="true">
+          <span>山</span><span>河</span><span>故</span><span>事</span
+          ><small>MOUNTAINS. RIVERS. STORIES.</small>
+        </div>
+      </section>
+      <div class="studio">
+        <aside class="brief panel">
+          <div class="section-heading">
+            <span class="step">01</span>
+            <h2>The story brief</h2>
+          </div>
+          <form id="story-form">
+            <label for="idea">Story idea</label>
+            <textarea
+              id="idea"
+              name="story_idea"
+              minlength="10"
+              maxlength="4000"
+              required
+              rows="6"
+              placeholder="A young palace physician discovers that the emperor's illness is no accident…"
+            ></textarea>
+            <div class="field-hint">
+              A character, a secret, a turning point.
+            </div>
+            <label for="genre">Genre</label>
+            <select id="genre" name="genre">
+              <option>Palace intrigue</option>
+              <option>Romance</option>
+              <option>Wuxia</option>
+              <option>Mystery</option>
+              <option>Historical adventure</option>
+            </select>
+            <div class="field-row">
+              <div>
+                <label for="duration">Target duration</label
+                ><select id="duration" name="target_duration">
+                  <option value="30">30 seconds</option>
+                  <option value="60" selected>60 seconds</option>
+                  <option value="90">90 seconds</option>
+                  <option value="120">120 seconds</option>
+                  <option value="180">180 seconds</option>
+                </select>
+              </div>
+              <div>
+                <label for="language">Output language</label
+                ><select id="language" name="output_language">
+                  <option>Simplified Chinese</option>
+                  <option>Traditional Chinese</option>
+                  <option>English</option>
+                </select>
+              </div>
+            </div>
+            <button id="generate" class="primary" type="submit">
+              Generate storyboard <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <p id="config-note" class="note"></p>
+          <div class="brief-footer">
+            <span>9:16 VERTICAL</span><span>SHORT-FORM DRAMA</span>
+          </div>
+        </aside>
+        <section class="board panel" aria-labelledby="board-heading">
+          <div class="board-toolbar">
+            <div class="section-heading">
+              <span class="step">02</span>
+              <h2 id="board-heading">Your storyboard</h2>
+            </div>
+            <div class="actions">
+              <button id="import" type="button" class="secondary">
+                Open JSON</button
+              ><button id="save" type="button" class="secondary" disabled>
+                Save JSON ↓</button
+              ><input
+                id="file"
+                type="file"
+                accept="application/json,.json"
+                hidden
+              />
+            </div>
+          </div>
+          <div id="status" role="status" aria-live="polite"></div>
+          <div id="empty" class="empty">
+            <div class="empty-art" aria-hidden="true">
+              <div class="frame">故事</div>
+              <span class="line"></span><span class="line short"></span>
+            </div>
+            <p class="eyebrow">EVERY EPIC BEGINS WITH AN IDEA</p>
+            <h3>Your first scene awaits.</h3>
+            <p>
+              Fill in your story brief to create a storyboard.<br />Then refine
+              the narration, dialogue, and direction.
+            </p>
+          </div>
+          <div id="project" hidden>
+            <div class="project-heading">
+              <div class="title-wrap">
+                <label for="title">PROJECT TITLE</label
+                ><input id="title" maxlength="200" required />
+              </div>
+              <span id="summary"></span>
+            </div>
+            <div id="scenes"></div>
+          </div>
+        </section>
+      </div>
+      <footer>
+        <span
+          >DynastyAI <span class="muted">/</span> Imagine the past. Create the
+          story.</span
+        ><span>IDEA → STORYBOARD <span class="muted">→ VIDEO</span></span>
+      </footer>
+    </main>
+  </body>
+</html>

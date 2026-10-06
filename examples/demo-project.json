@@ -1,0 +1,64 @@
+{
+  "title": "玉印之谜",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "duration": 20,
+      "narration": "夜色笼罩宫墙，沈月发现一封密信。",
+      "dialogue": [
+        {
+          "character": "沈月",
+          "line": "这封信会改变一切。"
+        }
+      ],
+      "visual_prompt": "月下宫门，红灯笼，汉服, 9:16",
+      "characters": [
+        "沈月",
+        "李衡"
+      ],
+      "camera_description": "缓慢推进，人物特写。"
+    },
+    {
+      "scene_number": 2,
+      "duration": 20,
+      "narration": "她与李衡相遇，真相逐渐浮现。",
+      "dialogue": [
+        {
+          "character": "李衡",
+          "line": "我愿与你共担风雨。"
+        }
+      ],
+      "visual_prompt": "古代庭院，竹影，丝绸衣袖, 9:16",
+      "characters": [
+        "沈月",
+        "李衡"
+      ],
+      "camera_description": "缓慢推进，人物特写。"
+    },
+    {
+      "scene_number": 3,
+      "duration": 20,
+      "narration": "天亮之前，他们必须作出选择。",
+      "dialogue": [
+        {
+          "character": "沈月",
+          "line": "今夜，我们自己决定命运。"
+        }
+      ],
+      "visual_prompt": "黎明城楼，玉印，晨雾, 9:16",
+      "characters": [
+        "沈月",
+        "李衡"
+      ],
+      "camera_description": "缓慢推进，人物特写。"
+    }
+  ],
+  "schema_version": "1.0",
+  "request": {
+    "story_idea": "A palace physician discovers a conspiracy against the emperor.",
+    "genre": "Palace intrigue",
+    "target_duration": 60,
+    "output_language": "Simplified Chinese"
+  },
+  "generation_mode": "demo"
+}
