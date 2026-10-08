@@ -4,6 +4,7 @@ import httpx
 from pydantic import ValidationError
 
 from app.config import Settings
+from app.llm import chat_payload
 from app.models import Project, StoryRequest
 from app.phase2_models import Character, ProjectDraft, ProjectV2, SceneV2, VisualStyle
 from app.prompts import refresh_prompts, slug_for_name
@@ -143,15 +144,7 @@ async def generate_project(request: StoryRequest, settings: Settings) -> Project
             response = await client.post(
                 settings.llm_base_url.rstrip("/") + "/chat/completions",
                 headers={"Authorization": f"Bearer {settings.llm_api_key}"},
-                json={
-                    "model": settings.llm_model,
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": request.model_dump_json()},
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "max_tokens": 9000,
-                },
+                json=chat_payload(settings, system, request.model_dump_json(), 9000),
             )
             response.raise_for_status()
             content = response.json()["choices"][0]["message"]["content"]

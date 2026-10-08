@@ -34,7 +34,7 @@ class ImageAsset(StrictModel):
     project_id: UUID
     scene_number: int = Field(ge=1)
     url: str = Field(pattern=r"^/api/assets/[0-9a-f-]+/[0-9a-f-]+$")
-    provider: Literal["mock", "openai"]
+    provider: Literal["mock", "openai", "alibaba"]
     model: str = Field(min_length=1, max_length=100)
     is_mock: bool
     created_at: datetime

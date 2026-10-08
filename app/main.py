@@ -42,7 +42,10 @@ def image_health(settings: Settings = Depends(get_settings)):
     return {
         "provider": settings.image_provider,
         "configured": settings.image_provider == "mock"
-        or (settings.image_provider == "openai" and bool(settings.image_api_key.strip())),
+        or (
+            settings.image_provider in ("openai", "alibaba")
+            and bool(settings.image_api_key.strip())
+        ),
     }
 
 

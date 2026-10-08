@@ -1,11 +1,13 @@
 import base64
 import binascii
 import hashlib
+import re
 import struct
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Protocol
+from urllib.parse import urlsplit
 from uuid import UUID, uuid4
 
 import httpx
@@ -127,12 +129,126 @@ class OpenAIImageProvider:
             raise ImageProviderError("Image provider returned invalid image data.") from exc
 
 
+_MAX_IMAGE_BYTES = 25 * 1024 * 1024
+_QWEN_RESULT_HOST = re.compile(r"dashscope-result-[a-z0-9-]+\.oss-[a-z0-9-]+\.aliyuncs\.com\Z")
+
+
+def _qwen_result_url(value: str) -> str:
+    """Only fetch signed PNG results from Alibaba's documented OSS result hosts."""
+    if not isinstance(value, str) or value.strip() != value or any(c.isspace() for c in value):
+        raise ValueError("Invalid result URL")
+    url = urlsplit(value)
+    if (
+        url.scheme != "https"
+        or not url.hostname
+        or not _QWEN_RESULT_HOST.fullmatch(url.hostname)
+        or url.username
+        or url.password
+        or url.port is not None
+        or url.fragment
+    ):
+        raise ValueError("Untrusted result URL")
+    return value
+
+
+def _png_dimensions(data: bytes) -> tuple[int, int]:
+    if len(data) > _MAX_IMAGE_BYTES or len(data) < 24:
+        raise ValueError("Unexpected image size")
+    if data[:16] != b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR":
+        raise ValueError("Provider did not return PNG data")
+    width, height = struct.unpack(">II", data[16:24])
+    if width < 1 or height < 1 or width * 16 != height * 9:
+        raise ValueError("Provider did not return a 9:16 image")
+    return width, height
+
+
+class AlibabaImageProvider:
+    def __init__(self, settings: Settings):
+        self.settings = settings
+
+    async def generate(self, prompt: str, scene_number: int) -> GeneratedImage:
+        if not self.settings.image_api_key.strip():
+            raise ImageProviderError("Set IMAGE_API_KEY in .env, or use IMAGE_PROVIDER=mock.", 503)
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.image_timeout_seconds) as client:
+                response = await client.post(
+                    self.settings.image_api_base_url.rstrip("/") + "/images/generations",
+                    headers={"Authorization": f"Bearer {self.settings.image_api_key}"},
+                    json={
+                        "model": self.settings.image_model,
+                        "prompt": prompt,
+                        "n": 1,
+                        "size": "1152x2048",
+                        "prompt_extend": False,
+                        "enable_thinking": False,
+                    },
+                )
+                response.raise_for_status()
+            url = _qwen_result_url(response.json()["data"][0]["url"])
+            # The signed URL is untrusted provider output. Never forward the API
+            # key, follow redirects, or retain the expiring URL in project JSON.
+            async with httpx.AsyncClient(
+                timeout=self.settings.image_timeout_seconds, follow_redirects=False
+            ) as client:
+                async with client.stream("GET", url) as image_response:
+                    image_response.raise_for_status()
+                    if image_response.is_redirect:
+                        raise ValueError("Image download redirected")
+                    if (
+                        image_response.headers.get("content-type", "").split(";")[0].lower()
+                        != "image/png"
+                    ):
+                        raise ValueError("Image download is not PNG")
+                    content_length = image_response.headers.get("content-length")
+                    if content_length and int(content_length) > _MAX_IMAGE_BYTES:
+                        raise ValueError("Image download is too large")
+                    data = bytearray()
+                    async for chunk in image_response.aiter_bytes():
+                        data.extend(chunk)
+                        if len(data) > _MAX_IMAGE_BYTES:
+                            raise ValueError("Image download is too large")
+            width, height = _png_dimensions(data)
+            return GeneratedImage(
+                data=bytes(data),
+                extension="png",
+                width=width,
+                height=height,
+                model=self.settings.image_model,
+                provider="alibaba",
+                is_mock=False,
+            )
+        except httpx.TimeoutException as exc:
+            raise ImageProviderError(
+                "Image generation or download timed out. Please retry this scene.", 504
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            code = exc.response.status_code
+            message = (
+                "Image provider rejected the API credentials. Check IMAGE_API_KEY."
+                if code in (401, 403) and exc.request.method == "POST"
+                else "Image provider is rate limiting requests. Retry this scene later."
+                if code == 429 and exc.request.method == "POST"
+                else "Image provider could not generate or download this scene."
+            )
+            raise ImageProviderError(message, 503 if code == 429 else 502) from exc
+        except httpx.RequestError as exc:
+            raise ImageProviderError(
+                "Unable to reach the image provider or download its result."
+            ) from exc
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ImageProviderError(
+                "Image provider returned invalid image data or an unsafe URL."
+            ) from exc
+
+
 def get_provider(settings: Settings) -> ImageProvider:
     if settings.image_provider == "mock":
         return MockImageProvider()
     if settings.image_provider == "openai":
         return OpenAIImageProvider(settings)
-    raise ImageProviderError("IMAGE_PROVIDER must be 'mock' or 'openai'.", 503)
+    if settings.image_provider == "alibaba":
+        return AlibabaImageProvider(settings)
+    raise ImageProviderError("IMAGE_PROVIDER must be 'mock', 'openai', or 'alibaba'.", 503)
 
 
 def asset_directory(settings: Settings) -> Path:

@@ -693,9 +693,13 @@ fetch("/api/image-health")
     $("image-mode").textContent =
       data.provider === "mock"
         ? "MOCK MODE · Images are labeled placeholders, not AI generated."
-        : data.configured
-          ? "OPENAI IMAGES CONFIGURED · Generating an image may incur provider charges."
-          : "OPENAI IMAGES NEEDS IMAGE_API_KEY · Set it in the backend .env, or use IMAGE_PROVIDER=mock.";
+        : data.provider === "alibaba"
+          ? data.configured
+            ? "QWEN IMAGES CONFIGURED · Generating an image may incur provider charges."
+            : "QWEN IMAGES NEEDS IMAGE_API_KEY · Set it in the backend .env, or use IMAGE_PROVIDER=mock."
+          : data.configured
+            ? "OPENAI IMAGES CONFIGURED · Generating an image may incur provider charges."
+            : "OPENAI IMAGES NEEDS IMAGE_API_KEY · Set it in the backend .env, or use IMAGE_PROVIDER=mock.";
   })
   .catch(() => {
     $("image-mode").textContent = "Image provider status unavailable.";

@@ -6,7 +6,7 @@ DynastyAI turns a story idea into an editable storyboard, a Character Bible, a V
 
 The story brief still captures idea, genre, target duration, and output language. The backend now generates structured recurring-character descriptions and project-level visual settings together with the storyboard. Each scene has a composed final image prompt that includes its visual action and camera direction, the full Visual Style Bible, and the **same complete Character Bible entry** for each recurring character ID. The final prompt is visible and editable before image generation.
 
-The editor can create a mock image for one scene, regenerate it, or generate all scenes sequentially. The mock provider writes a clearly labeled 9:16 SVG placeholder and never pretends to use AI. The OpenAI provider requests a 1152×2048 PNG through the Images API. Provider selection and keys are server-side environment settings. Generated files live in `data/assets/<project-id>/` and are ignored by Git; project JSON stores only asset metadata and local URLs.
+The editor can create a mock image for one scene, regenerate it, or generate all scenes sequentially. The mock provider writes a clearly labeled 9:16 SVG placeholder and never pretends to use AI. The OpenAI and Alibaba Cloud Model Studio image providers request 1152×2048 PNGs. Provider selection and keys are server-side environment settings. Generated files live in `data/assets/<project-id>/` and are ignored by Git; project JSON stores only asset metadata and local URLs.
 
 Character consistency is **prompt-level only**. Independent image generations may still change a face, costume detail, or prop. There is no reference-image conditioning, identity embedding, cross-scene image editing, or visual matching in this phase. Character and era descriptions are fictional creative guidance, not a claim of historical accuracy.
 
@@ -37,10 +37,11 @@ Open [localhost:8000](http://localhost:8000). On Windows, `./start-demo.ps1` sta
 
 ## Configure real providers
 
-Storyboards and Character Bibles use an OpenAI-compatible Chat Completions endpoint. The model must support JSON-object responses. Set the API root ending in `/v1`, not the `/chat/completions` endpoint:
+Storyboards and Character Bibles use an OpenAI-compatible Chat Completions endpoint. The model must support JSON-object responses. Set the API root ending in `/v1`, not the `/chat/completions` endpoint. OpenAI remains the default:
 
 ```dotenv
 DEMO_MODE=false
+LLM_PROVIDER=openai
 LLM_API_KEY=your-story-llm-key
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL=gpt-4o-mini
@@ -54,6 +55,25 @@ IMAGE_API_KEY=your-image-api-key
 IMAGE_API_BASE_URL=https://api.openai.com/v1
 IMAGE_MODEL=gpt-image-2.5-flare
 ```
+
+Alibaba Cloud Model Studio can be selected independently for storyboards and images. For Qwen3.7-Flash and Qwen-Image 3.0 together, use a **Model Studio API key for the chosen region** (the same key can be used for both settings if both models are enabled there):
+
+```dotenv
+DEMO_MODE=false
+LLM_PROVIDER=alibaba
+LLM_API_KEY=your-region-specific-model-studio-key
+LLM_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+LLM_MODEL=qwen3.7-flash
+IMAGE_PROVIDER=alibaba
+IMAGE_API_KEY=your-region-specific-model-studio-key
+IMAGE_API_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+IMAGE_MODEL=qwen-image-3.0
+IMAGE_TIMEOUT_SECONDS=600
+```
+
+The example uses Singapore. For China (Beijing), replace both base URLs with `https://dashscope.aliyuncs.com/compatible-mode/v1`; for US (Virginia), use `https://dashscope-us.aliyuncs.com/compatible-mode/v1`. Alibaba also supports workspace-dedicated domains such as `https://{WorkspaceId}.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1` for Singapore. Choose a model, endpoint, and key **from the same region**, and check model availability in that region. See Alibaba's [regional base URLs](https://help.aliyun.com/en/model-studio/base-url) and [Qwen Image API reference](https://help.aliyun.com/en/model-studio/qwen-image-generation-and-editing-api-reference).
+
+Qwen's JSON-object response is validated against the existing project schemas. Its image API returns an expiring signed URL rather than base64 data. DynastyAI downloads the PNG from an allowed Alibaba result host over HTTPS, rejects redirects and oversized or non-9:16 results, and saves only the local asset metadata. It never stores the signed URL or sends the API key to the image host. Qwen prompt rewriting is disabled so the visible final prompt is sent as written; the model can still interpret it differently. The adapter uses synchronous image requests, so large scenes may need the longer timeout above. See Alibaba's [structured-output guidance](https://help.aliyun.com/en/model-studio/qwen-structured-output) and [image request/response contract](https://help.aliyun.com/en/model-studio/qwen-image-generation-and-editing-api-reference).
 
 The configured image model must support the Images API and the requested 1152×2048 PNG dimensions. The [official image generation guide](https://developers.openai.com/api/docs/guides/image-generation) describes supported models and dimensions. A real image call may incur provider charges. Automated tests never make billable calls. No real provider call is attempted merely by starting the app or opening a project.
 
@@ -96,7 +116,8 @@ app/phase2_models.py    Character, style, asset, and v2 project schema
 app/storyboard.py       Phase 1 LLM flow and demo template
 app/phase2.py           v2 generation and v1 migration
 app/prompts.py          deterministic final image prompt composition
-app/images.py           mock and OpenAI image providers; local asset writes
+app/images.py           mock, OpenAI, and Alibaba image providers; local asset writes
+app/llm.py              shared chat request contract for OpenAI and Qwen
 app/main.py             FastAPI routes and asset serving
 app/static/             browser editor
 tests/                  backend tests
