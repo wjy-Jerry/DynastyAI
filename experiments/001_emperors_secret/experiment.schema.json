@@ -261,6 +261,12 @@
           "title": "Narration Zh",
           "type": "string"
         },
+        "narration_en": {
+          "maxLength": 160,
+          "minLength": 10,
+          "title": "Narration En",
+          "type": "string"
+        },
         "dialogue": {
           "items": {
             "$ref": "#/$defs/Dialogue"
@@ -274,6 +280,7 @@
       "required": [
         "action_zh",
         "narration_zh",
+        "narration_en",
         "dialogue"
       ],
       "title": "Script",

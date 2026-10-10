@@ -50,6 +50,7 @@
       "script": {
         "action_zh": "深夜，林月在藏书阁翻开先帝遗诏，发现纸背藏着一枚新鲜的朱印。",
         "narration_zh": "皇帝驾崩第三夜，遗诏竟有新印。",
+        "narration_en": "Three nights after his death, the emperor's decree bears a fresh seal.",
         "dialogue": [{"speaker": "林月", "line_zh": "这印，是刚盖的。"}]
       },
       "start_frame_spec_en": "Medium close shot: Lin Yue alone at a candlelit archive desk, both hands on a folded imperial decree; red wax seal visible, face and costume unobstructed, no readable writing.",
@@ -68,6 +69,7 @@
       "script": {
         "action_zh": "门外甲胄声逼近。林月把诏书靠近烛火，一条隐藏的龙纹缓缓浮现。",
         "narration_zh": "脚步逼近，龙纹在火光中显形。",
+        "narration_en": "As guards approach, Lin Yue uncovers a hidden dragon mark.",
         "dialogue": [{"speaker": "林月", "line_zh": "他还活着？"}]
       },
       "start_frame_spec_en": "Tight three-quarter shot: Lin Yue holds the same decree near a candle while looking toward a closed lattice door; faint dragon motif in the paper, face, jade hairpin and teal costume visible, no other person.",
@@ -86,6 +88,7 @@
       "script": {
         "action_zh": "暗门从书架后开启。林月藏起诏书，逆光里一个戴着玉佩的身影抬起头。",
         "narration_zh": "暗门之后，死去的皇帝现身。",
+        "narration_en": "A secret door opens, and the dead emperor appears.",
         "dialogue": [{"speaker": "林月", "line_zh": "陛下……"}]
       },
       "start_frame_spec_en": "Over-shoulder medium shot: Lin Yue in the foreground with her recognizable profile, low braided bun and teal costume; a narrow secret doorway in the archive opens behind her, distant figure only as an unidentifiable silhouette.",

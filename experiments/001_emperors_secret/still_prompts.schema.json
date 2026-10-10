@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "PortraitPrompt": {
+      "additionalProperties": false,
+      "properties": {
+        "output_file": {
+          "const": "assets/lin_yue_reference.png",
+          "title": "Output File",
+          "type": "string"
+        },
+        "generation_mode": {
+          "const": "text_to_image_master",
+          "title": "Generation Mode",
+          "type": "string"
+        },
+        "prompt_en": {
+          "minLength": 300,
+          "title": "Prompt En",
+          "type": "string"
+        },
+        "negative_prompt_en": {
+          "minLength": 30,
+          "title": "Negative Prompt En",
+          "type": "string"
+        }
+      },
+      "required": [
+        "output_file",
+        "generation_mode",
+        "prompt_en",
+        "negative_prompt_en"
+      ],
+      "title": "PortraitPrompt",
+      "type": "object"
+    },
+    "SceneStillPrompt": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_number": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Scene Number",
+          "type": "integer"
+        },
+        "output_file": {
+          "title": "Output File",
+          "type": "string"
+        },
+        "generation_mode": {
+          "const": "image_to_image_reference",
+          "title": "Generation Mode",
+          "type": "string"
+        },
+        "conditioning_reference_file": {
+          "const": "assets/lin_yue_reference.png",
+          "title": "Conditioning Reference File",
+          "type": "string"
+        },
+        "prompt_en": {
+          "minLength": 300,
+          "title": "Prompt En",
+          "type": "string"
+        },
+        "negative_prompt_en": {
+          "minLength": 30,
+          "title": "Negative Prompt En",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_number",
+        "output_file",
+        "generation_mode",
+        "conditioning_reference_file",
+        "prompt_en",
+        "negative_prompt_en"
+      ],
+      "title": "SceneStillPrompt",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "experiment_id": {
+      "const": "001_emperors_secret",
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "character_bible_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Character Bible Sha256",
+      "type": "string"
+    },
+    "visual_style_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Visual Style Sha256",
+      "type": "string"
+    },
+    "reference_portrait": {
+      "$ref": "#/$defs/PortraitPrompt"
+    },
+    "scene_start_frames": {
+      "items": {
+        "$ref": "#/$defs/SceneStillPrompt"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Scene Start Frames",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "character_bible_sha256",
+    "visual_style_sha256",
+    "reference_portrait",
+    "scene_start_frames"
+  ],
+  "title": "StillPrompts",
+  "type": "object"
+}

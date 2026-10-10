@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 FRAME_SIZE = (720, 1280)
 MAX_FRAME_BYTES = 14 * 1024 * 1024
+MAX_REFERENCE_BYTES = 9 * 1024 * 1024
 
 
 class Strict(BaseModel):
@@ -28,6 +29,7 @@ class Dialogue(Strict):
 class Script(Strict):
     action_zh: str = Field(min_length=1)
     narration_zh: str = Field(min_length=1)
+    narration_en: str = Field(min_length=10, max_length=160)
     dialogue: list[Dialogue] = Field(min_length=1, max_length=1)
 
 
@@ -155,6 +157,56 @@ class WanConfig(Strict):
     preview_only: Literal[True]
 
 
+class PortraitPrompt(Strict):
+    output_file: Literal["assets/lin_yue_reference.png"]
+    generation_mode: Literal["text_to_image_master"]
+    prompt_en: str = Field(min_length=300)
+    negative_prompt_en: str = Field(min_length=30)
+
+
+class SceneStillPrompt(Strict):
+    scene_number: int = Field(ge=1, le=3)
+    output_file: str
+    generation_mode: Literal["image_to_image_reference"]
+    conditioning_reference_file: Literal["assets/lin_yue_reference.png"]
+    prompt_en: str = Field(min_length=300)
+    negative_prompt_en: str = Field(min_length=30)
+
+
+class StillPrompts(Strict):
+    schema_version: Literal["1.0"]
+    experiment_id: Literal["001_emperors_secret"]
+    character_bible_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    visual_style_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reference_portrait: PortraitPrompt
+    scene_start_frames: list[SceneStillPrompt] = Field(min_length=3, max_length=3)
+
+
+def canonical_digest(value: dict) -> str:
+    canonical = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def load_still_prompts(experiment: Experiment) -> StillPrompts:
+    prompts = StillPrompts.model_validate_json((ROOT / "still_prompts.json").read_text("utf-8"))
+    if prompts.character_bible_sha256 != canonical_digest(experiment.character_bible.model_dump()):
+        raise ValueError("Still prompts do not match the locked Character Bible")
+    if prompts.visual_style_sha256 != canonical_digest(experiment.visual_style.model_dump()):
+        raise ValueError("Still prompts do not match the locked Visual Style Bible")
+    all_prompts = [prompts.reference_portrait.prompt_en] + [
+        scene.prompt_en for scene in prompts.scene_start_frames
+    ]
+    for prompt in all_prompts:
+        if prompt.count(experiment.identity_anchor_en) != 1:
+            raise ValueError("Every still prompt must reuse the exact Lin Yue identity anchor")
+        if any(value not in prompt for value in experiment.visual_style.model_dump().values()):
+            raise ValueError("Every still prompt must include the complete Visual Style Bible")
+    for number, scene in enumerate(prompts.scene_start_frames, 1):
+        if scene.scene_number != number or scene.output_file != f"assets/scene_0{number}_start.png":
+            raise ValueError("Still prompt output names must match the three production frames")
+    return prompts
+
+
 def load_package() -> tuple[Experiment, ViduConfig, WanConfig]:
     experiment = Experiment.model_validate_json((ROOT / "experiment.json").read_text("utf-8"))
     vidu = ViduConfig.model_validate_json(
@@ -164,9 +216,9 @@ def load_package() -> tuple[Experiment, ViduConfig, WanConfig]:
     return experiment, vidu, wan
 
 
-def frame_digest(path: Path) -> str:
+def frame_digest(path: Path, max_bytes: int = MAX_FRAME_BYTES) -> str:
     data = path.read_bytes()
-    if len(data) > MAX_FRAME_BYTES or data[:16] != PNG_SIGNATURE + b"\x00\x00\x00\rIHDR":
+    if len(data) > max_bytes or data[:16] != PNG_SIGNATURE + b"\x00\x00\x00\rIHDR":
         raise ValueError(f"Invalid RGB PNG frame: {path.name}")
     width, height = struct.unpack(">II", data[16:24])
     if (width, height) != FRAME_SIZE or data[24:26] != b"\x08\x02":
@@ -212,20 +264,34 @@ def frame_digest(path: Path) -> str:
 
 def check_frames(experiment: Experiment, source: Literal["fixture", "production"]) -> list[str]:
     manifest_path = ROOT / ("fixtures" if source == "fixture" else "assets") / "manifest.json"
-    manifest = json.loads(manifest_path.read_text("utf-8"))
     expected_names = [
         Path(scene.fixture_frame if source == "fixture" else scene.production_frame).name
         for scene in experiment.scenes
     ]
+    if source == "production":
+        expected_names.append(
+            Path(experiment.reference_image_spec.character_reference_expected_filename).name
+        )
+        missing = [name for name in expected_names if not (ROOT / "assets" / name).is_file()]
+        if missing:
+            raise FileNotFoundError("Missing production image assets: " + ", ".join(missing))
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"Missing image SHA-256 manifest: {manifest_path}")
+    manifest = json.loads(manifest_path.read_text("utf-8"))
     if set(manifest) != set(expected_names):
-        raise ValueError("Frame manifest must contain exactly the three selected frames")
+        raise ValueError("Image manifest must contain exactly the selected assets")
     digests = []
-    for scene, name in zip(experiment.scenes, expected_names, strict=True):
+    for scene, name in zip(experiment.scenes, expected_names[:3], strict=True):
         path = ROOT / (scene.fixture_frame if source == "fixture" else scene.production_frame)
         digest = frame_digest(path)
         if manifest[name] != digest:
             raise ValueError(f"Frame SHA-256 does not match manifest: {name}")
         digests.append(digest)
+    if source == "production":
+        portrait_name = expected_names[-1]
+        portrait_digest = frame_digest(ROOT / "assets" / portrait_name, MAX_REFERENCE_BYTES)
+        if manifest[portrait_name] != portrait_digest:
+            raise ValueError(f"Reference portrait SHA-256 does not match manifest: {portrait_name}")
     return digests
 
 
@@ -307,21 +373,31 @@ def main():
     parser.add_argument("--write", action="store_true", help="write the generated JSON Schema")
     args = parser.parse_args()
     if args.command == "schema":
-        schema = json.dumps(Experiment.model_json_schema(), ensure_ascii=False, indent=2) + "\n"
-        if args.write:
-            (ROOT / "experiment.schema.json").write_text(schema, encoding="utf-8")
-            print("Wrote experiment.schema.json")
-        elif (ROOT / "experiment.schema.json").read_text(encoding="utf-8") != schema:
-            raise SystemExit("Schema drift detected; regenerate with schema --write.")
-        else:
-            print("Committed JSON Schema matches the Pydantic models.")
+        schemas = {
+            "experiment.schema.json": Experiment.model_json_schema(),
+            "still_prompts.schema.json": StillPrompts.model_json_schema(),
+        }
+        for name, model_schema in schemas.items():
+            schema = json.dumps(model_schema, ensure_ascii=False, indent=2) + "\n"
+            path = ROOT / name
+            if args.write:
+                path.write_text(schema, encoding="utf-8")
+            elif path.read_text(encoding="utf-8") != schema:
+                raise SystemExit(f"Schema drift in {name}; regenerate with schema --write.")
+        print(
+            "Wrote both JSON Schemas."
+            if args.write
+            else "Both committed JSON Schemas match the Pydantic models."
+        )
         return
     experiment, vidu, wan = load_package()
+    load_still_prompts(experiment)
     digests = check_frames(experiment, args.frames)
     if args.command == "preview":
         print(json.dumps(preview(experiment, vidu, wan, digests, args.frames), indent=2))
     else:
-        print(f"Validated experiment, provider templates, and three {args.frames} frames.")
+        count = "four" if args.frames == "production" else "three"
+        print(f"Validated experiment, still prompts, templates, and {count} {args.frames} images.")
 
 
 if __name__ == "__main__":
