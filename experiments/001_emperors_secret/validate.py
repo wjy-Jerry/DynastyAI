@@ -216,15 +216,14 @@ def load_package() -> tuple[Experiment, ViduConfig, WanConfig]:
     return experiment, vidu, wan
 
 
-def frame_digest(path: Path, max_bytes: int = MAX_FRAME_BYTES) -> str:
-    data = path.read_bytes()
+def rgb_png_digest(data: bytes, name: str, max_bytes: int = MAX_FRAME_BYTES) -> str:
     if len(data) > max_bytes or data[:16] != PNG_SIGNATURE + b"\x00\x00\x00\rIHDR":
-        raise ValueError(f"Invalid RGB PNG frame: {path.name}")
+        raise ValueError(f"Invalid RGB PNG frame: {name}")
     width, height = struct.unpack(">II", data[16:24])
     if (width, height) != FRAME_SIZE or data[24:26] != b"\x08\x02":
-        raise ValueError(f"Frame must be 720x1280, 8-bit RGB PNG without alpha: {path.name}")
+        raise ValueError(f"Frame must be 720x1280, 8-bit RGB PNG without alpha: {name}")
     if data[26:29] != b"\x00\x00\x00":
-        raise ValueError(f"Unsupported PNG compression, filter, or interlace: {path.name}")
+        raise ValueError(f"Unsupported PNG compression, filter, or interlace: {name}")
     offset = 8
     compressed = bytearray()
     seen_iend = False
@@ -232,34 +231,38 @@ def frame_digest(path: Path, max_bytes: int = MAX_FRAME_BYTES) -> str:
         length = struct.unpack(">I", data[offset : offset + 4])[0]
         end = offset + 12 + length
         if end > len(data):
-            raise ValueError(f"Truncated PNG chunk: {path.name}")
+            raise ValueError(f"Truncated PNG chunk: {name}")
         kind = data[offset + 4 : offset + 8]
         content = data[offset + 8 : offset + 8 + length]
         checksum = struct.unpack(">I", data[offset + 8 + length : end])[0]
         if zlib.crc32(kind + content) & 0xFFFFFFFF != checksum:
-            raise ValueError(f"Bad PNG checksum: {path.name}")
+            raise ValueError(f"Bad PNG checksum: {name}")
         if kind == b"IDAT":
             compressed.extend(content)
         if kind == b"IEND":
             seen_iend = True
             if end != len(data):
-                raise ValueError(f"Trailing PNG data: {path.name}")
+                raise ValueError(f"Trailing PNG data: {name}")
             break
         offset = end
     if not seen_iend or not compressed:
-        raise ValueError(f"Missing PNG image data: {path.name}")
+        raise ValueError(f"Missing PNG image data: {name}")
     expected_size = (width * 3 + 1) * height
     decoder = zlib.decompressobj()
     try:
         pixels = decoder.decompress(compressed, expected_size + 1)
         pixels += decoder.flush(expected_size + 1 - len(pixels))
     except zlib.error as exc:
-        raise ValueError(f"Corrupt PNG pixels: {path.name}") from exc
+        raise ValueError(f"Corrupt PNG pixels: {name}") from exc
     if len(pixels) != expected_size or not decoder.eof or decoder.unconsumed_tail:
-        raise ValueError(f"Invalid PNG pixel length: {path.name}")
+        raise ValueError(f"Invalid PNG pixel length: {name}")
     if any(pixels[row * (width * 3 + 1)] > 4 for row in range(height)):
-        raise ValueError(f"Invalid PNG row filter: {path.name}")
+        raise ValueError(f"Invalid PNG row filter: {name}")
     return hashlib.sha256(data).hexdigest()
+
+
+def frame_digest(path: Path, max_bytes: int = MAX_FRAME_BYTES) -> str:
+    return rgb_png_digest(path.read_bytes(), path.name, max_bytes)
 
 
 def check_frames(experiment: Experiment, source: Literal["fixture", "production"]) -> list[str]:
