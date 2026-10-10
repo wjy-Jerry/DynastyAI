@@ -1,0 +1,415 @@
+{
+  "$defs": {
+    "Character": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "const": "lin-yue",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "const": "Lin Yue (林月)",
+          "title": "Name",
+          "type": "string"
+        },
+        "role": {
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "approximate_age": {
+          "minLength": 1,
+          "title": "Approximate Age",
+          "type": "string"
+        },
+        "appearance": {
+          "minLength": 1,
+          "title": "Appearance",
+          "type": "string"
+        },
+        "facial_features": {
+          "minLength": 1,
+          "title": "Facial Features",
+          "type": "string"
+        },
+        "hairstyle": {
+          "minLength": 1,
+          "title": "Hairstyle",
+          "type": "string"
+        },
+        "costume": {
+          "minLength": 1,
+          "title": "Costume",
+          "type": "string"
+        },
+        "accessories": {
+          "minLength": 1,
+          "title": "Accessories",
+          "type": "string"
+        },
+        "personality_visual_impression": {
+          "minLength": 1,
+          "title": "Personality Visual Impression",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "role",
+        "approximate_age",
+        "appearance",
+        "facial_features",
+        "hairstyle",
+        "costume",
+        "accessories",
+        "personality_visual_impression"
+      ],
+      "title": "Character",
+      "type": "object"
+    },
+    "Comparison": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_per_scene_seconds": {
+          "const": 5,
+          "title": "Duration Per Scene Seconds",
+          "type": "integer"
+        },
+        "resolution_tier": {
+          "const": "720p",
+          "title": "Resolution Tier",
+          "type": "string"
+        },
+        "visual_scoring_only": {
+          "const": true,
+          "title": "Visual Scoring Only",
+          "type": "boolean"
+        },
+        "seed": {
+          "maximum": 2147483647,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "prompt_rewriting": {
+          "const": false,
+          "title": "Prompt Rewriting",
+          "type": "boolean"
+        },
+        "one_take_per_scene": {
+          "const": true,
+          "title": "One Take Per Scene",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "duration_per_scene_seconds",
+        "resolution_tier",
+        "visual_scoring_only",
+        "seed",
+        "prompt_rewriting",
+        "one_take_per_scene"
+      ],
+      "title": "Comparison",
+      "type": "object"
+    },
+    "Dialogue": {
+      "additionalProperties": false,
+      "properties": {
+        "speaker": {
+          "const": "林月",
+          "title": "Speaker",
+          "type": "string"
+        },
+        "line_zh": {
+          "minLength": 1,
+          "title": "Line Zh",
+          "type": "string"
+        }
+      },
+      "required": [
+        "speaker",
+        "line_zh"
+      ],
+      "title": "Dialogue",
+      "type": "object"
+    },
+    "ExpectedOutputs": {
+      "additionalProperties": false,
+      "properties": {
+        "vidu": {
+          "title": "Vidu",
+          "type": "string"
+        },
+        "wan": {
+          "title": "Wan",
+          "type": "string"
+        }
+      },
+      "required": [
+        "vidu",
+        "wan"
+      ],
+      "title": "ExpectedOutputs",
+      "type": "object"
+    },
+    "ReferenceImageSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "character_reference_expected_filename": {
+          "const": "assets/lin_yue_reference.png",
+          "title": "Character Reference Expected Filename",
+          "type": "string"
+        },
+        "character_reference_description": {
+          "minLength": 20,
+          "title": "Character Reference Description",
+          "type": "string"
+        },
+        "scene_frame_format": {
+          "minLength": 20,
+          "title": "Scene Frame Format",
+          "type": "string"
+        },
+        "fixture_status": {
+          "minLength": 20,
+          "title": "Fixture Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "character_reference_expected_filename",
+        "character_reference_description",
+        "scene_frame_format",
+        "fixture_status"
+      ],
+      "title": "ReferenceImageSpec",
+      "type": "object"
+    },
+    "Scene": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_number": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Scene Number",
+          "type": "integer"
+        },
+        "start_second": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Start Second",
+          "type": "integer"
+        },
+        "duration_seconds": {
+          "const": 5,
+          "title": "Duration Seconds",
+          "type": "integer"
+        },
+        "script": {
+          "$ref": "#/$defs/Script"
+        },
+        "start_frame_spec_en": {
+          "minLength": 30,
+          "title": "Start Frame Spec En",
+          "type": "string"
+        },
+        "motion_prompt_en": {
+          "maxLength": 5000,
+          "minLength": 100,
+          "title": "Motion Prompt En",
+          "type": "string"
+        },
+        "fixture_frame": {
+          "title": "Fixture Frame",
+          "type": "string"
+        },
+        "production_frame": {
+          "title": "Production Frame",
+          "type": "string"
+        },
+        "expected_outputs": {
+          "$ref": "#/$defs/ExpectedOutputs"
+        }
+      },
+      "required": [
+        "scene_number",
+        "start_second",
+        "duration_seconds",
+        "script",
+        "start_frame_spec_en",
+        "motion_prompt_en",
+        "fixture_frame",
+        "production_frame",
+        "expected_outputs"
+      ],
+      "title": "Scene",
+      "type": "object"
+    },
+    "Script": {
+      "additionalProperties": false,
+      "properties": {
+        "action_zh": {
+          "minLength": 1,
+          "title": "Action Zh",
+          "type": "string"
+        },
+        "narration_zh": {
+          "minLength": 1,
+          "title": "Narration Zh",
+          "type": "string"
+        },
+        "dialogue": {
+          "items": {
+            "$ref": "#/$defs/Dialogue"
+          },
+          "maxItems": 1,
+          "minItems": 1,
+          "title": "Dialogue",
+          "type": "array"
+        }
+      },
+      "required": [
+        "action_zh",
+        "narration_zh",
+        "dialogue"
+      ],
+      "title": "Script",
+      "type": "object"
+    },
+    "VisualStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "historical_era": {
+          "minLength": 1,
+          "title": "Historical Era",
+          "type": "string"
+        },
+        "visual_style": {
+          "minLength": 1,
+          "title": "Visual Style",
+          "type": "string"
+        },
+        "lighting": {
+          "minLength": 1,
+          "title": "Lighting",
+          "type": "string"
+        },
+        "cinematography": {
+          "minLength": 1,
+          "title": "Cinematography",
+          "type": "string"
+        },
+        "color_mood": {
+          "minLength": 1,
+          "title": "Color Mood",
+          "type": "string"
+        },
+        "aspect_ratio": {
+          "const": "9:16",
+          "title": "Aspect Ratio",
+          "type": "string"
+        }
+      },
+      "required": [
+        "historical_era",
+        "visual_style",
+        "lighting",
+        "cinematography",
+        "color_mood",
+        "aspect_ratio"
+      ],
+      "title": "VisualStyle",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "experiment_id": {
+      "const": "001_emperors_secret",
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "title": {
+      "const": "The Emperor's Secret",
+      "title": "Title",
+      "type": "string"
+    },
+    "story_idea": {
+      "minLength": 20,
+      "title": "Story Idea",
+      "type": "string"
+    },
+    "genre": {
+      "const": "Chinese historical suspense drama",
+      "title": "Genre",
+      "type": "string"
+    },
+    "target_duration_seconds": {
+      "const": 15,
+      "title": "Target Duration Seconds",
+      "type": "integer"
+    },
+    "output_language": {
+      "const": "Simplified Chinese",
+      "title": "Output Language",
+      "type": "string"
+    },
+    "aspect_ratio": {
+      "const": "9:16",
+      "title": "Aspect Ratio",
+      "type": "string"
+    },
+    "comparison": {
+      "$ref": "#/$defs/Comparison"
+    },
+    "character_bible": {
+      "$ref": "#/$defs/Character"
+    },
+    "identity_anchor_en": {
+      "minLength": 50,
+      "title": "Identity Anchor En",
+      "type": "string"
+    },
+    "visual_style": {
+      "$ref": "#/$defs/VisualStyle"
+    },
+    "reference_image_spec": {
+      "$ref": "#/$defs/ReferenceImageSpec"
+    },
+    "scenes": {
+      "items": {
+        "$ref": "#/$defs/Scene"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Scenes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "title",
+    "story_idea",
+    "genre",
+    "target_duration_seconds",
+    "output_language",
+    "aspect_ratio",
+    "comparison",
+    "character_bible",
+    "identity_anchor_en",
+    "visual_style",
+    "reference_image_spec",
+    "scenes"
+  ],
+  "title": "Experiment",
+  "type": "object"
+}

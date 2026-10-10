@@ -1,0 +1,9 @@
+anonymous_id,scope,scene_number,first_frame_fidelity,face_identity,hair_costume,motion_adherence,camera_composition,artifact_absence,cross_scene_identity,notes
+A-01,clip,1,,,,,,,,
+A-02,clip,2,,,,,,,,
+A-03,clip,3,,,,,,,,
+B-01,clip,1,,,,,,,,
+B-02,clip,2,,,,,,,,
+B-03,clip,3,,,,,,,,
+A-SET,set,,,,,,,,,
+B-SET,set,,,,,,,,,

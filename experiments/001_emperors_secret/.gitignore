@@ -1,0 +1,7 @@
+# Replace mock fixtures with reviewed production frames locally; keep user media out of Git.
+assets/
+outputs/
+previews/
+.env
+.env.*
+!.env.example

@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "001_emperors_secret",
+  "title": "The Emperor's Secret",
+  "story_idea": "A court archivist discovers that the emperor's death was staged and must decide whether to reveal him before the palace guards reach her.",
+  "genre": "Chinese historical suspense drama",
+  "target_duration_seconds": 15,
+  "output_language": "Simplified Chinese",
+  "aspect_ratio": "9:16",
+  "comparison": {
+    "duration_per_scene_seconds": 5,
+    "resolution_tier": "720p",
+    "visual_scoring_only": true,
+    "seed": 17001001,
+    "prompt_rewriting": false,
+    "one_take_per_scene": true
+  },
+  "character_bible": {
+    "id": "lin-yue",
+    "name": "Lin Yue (林月)",
+    "role": "Palace archivist who protects the imperial records",
+    "approximate_age": "About 26",
+    "appearance": "Slender build, upright posture, warm ivory skin",
+    "facial_features": "Oval face, straight dark brows, almond-shaped dark brown eyes, a small beauty mark below the left eye",
+    "hairstyle": "Black hair in a low braided bun, center part, one narrow jade hairpin",
+    "costume": "Deep teal cross-collar silk hanfu with narrow sleeves and subtle cloud embroidery; same costume in every scene",
+    "accessories": "Narrow pale-jade hairpin and a small dark leather document pouch at the waist",
+    "personality_visual_impression": "Alert, restrained, intelligent; fear shown through small controlled movements"
+  },
+  "identity_anchor_en": "Lin Yue has an oval face, straight dark brows, almond-shaped dark brown eyes, a small beauty mark below her left eye, black hair in a low braided bun with one narrow pale-jade hairpin, and the same deep teal cross-collar silk hanfu with narrow sleeves and subtle cloud embroidery.",
+  "visual_style": {
+    "historical_era": "Fictional Chinese imperial court; dynasty deliberately unspecified",
+    "visual_style": "Grounded cinematic historical suspense with textured wood, silk and paper; no fantasy effects",
+    "lighting": "Practical amber lantern and candlelight with cool moonlit shadows",
+    "cinematography": "Vertical 9:16 close and medium shots, deliberate slow movement, shallow depth of field",
+    "color_mood": "Muted jade, amber, ink black, and desaturated crimson",
+    "aspect_ratio": "9:16"
+  },
+  "reference_image_spec": {
+    "character_reference_expected_filename": "assets/lin_yue_reference.png",
+    "character_reference_description": "Single unobstructed three-quarter portrait of Lin Yue against a plain dark backdrop, same face, hairpin, and deep teal hanfu as the three scene frames; no other person, text, watermark, or modern item.",
+    "scene_frame_format": "RGB PNG with no alpha, exactly 720x1280, 9:16, under 14 MiB per frame so base64 plus JSON stays below Vidu's 20 MB POST-body limit",
+    "fixture_status": "Committed mock PNGs are geometry and pipeline fixtures only; they are not suitable for visual model evaluation."
+  },
+  "scenes": [
+    {
+      "scene_number": 1,
+      "start_second": 0,
+      "duration_seconds": 5,
+      "script": {
+        "action_zh": "深夜，林月在藏书阁翻开先帝遗诏，发现纸背藏着一枚新鲜的朱印。",
+        "narration_zh": "皇帝驾崩第三夜，遗诏竟有新印。",
+        "dialogue": [{"speaker": "林月", "line_zh": "这印，是刚盖的。"}]
+      },
+      "start_frame_spec_en": "Medium close shot: Lin Yue alone at a candlelit archive desk, both hands on a folded imperial decree; red wax seal visible, face and costume unobstructed, no readable writing.",
+      "motion_prompt_en": "A single continuous five-second vertical shot in a fictional Chinese palace archive at night. Lin Yue has an oval face, straight dark brows, almond-shaped dark brown eyes, a small beauty mark below her left eye, black hair in a low braided bun with one narrow pale-jade hairpin, and the same deep teal cross-collar silk hanfu with narrow sleeves and subtle cloud embroidery. From the supplied starting frame, she carefully tilts the decree toward candlelight; her eyes narrow as she spots fresh red seal wax. The camera makes a slow, restrained push-in. The candle flickers and silk sleeves move naturally. Preserve her face, hair, costume, hands, and the archive layout. No cuts, no new characters, no readable text, no subtitles, no audio.",
+      "fixture_frame": "fixtures/scene_01_start.mock.png",
+      "production_frame": "assets/scene_01_start.png",
+      "expected_outputs": {
+        "vidu": "outputs/vidu_q3_turbo/scene_01.mp4",
+        "wan": "outputs/wan_2_7_i2v/scene_01.mp4"
+      }
+    },
+    {
+      "scene_number": 2,
+      "start_second": 5,
+      "duration_seconds": 5,
+      "script": {
+        "action_zh": "门外甲胄声逼近。林月把诏书靠近烛火，一条隐藏的龙纹缓缓浮现。",
+        "narration_zh": "脚步逼近，龙纹在火光中显形。",
+        "dialogue": [{"speaker": "林月", "line_zh": "他还活着？"}]
+      },
+      "start_frame_spec_en": "Tight three-quarter shot: Lin Yue holds the same decree near a candle while looking toward a closed lattice door; faint dragon motif in the paper, face, jade hairpin and teal costume visible, no other person.",
+      "motion_prompt_en": "A single continuous five-second vertical shot in the same fictional Chinese palace archive at night. Lin Yue has an oval face, straight dark brows, almond-shaped dark brown eyes, a small beauty mark below her left eye, black hair in a low braided bun with one narrow pale-jade hairpin, and the same deep teal cross-collar silk hanfu with narrow sleeves and subtle cloud embroidery. From the supplied starting frame, she slowly raises the decree near the candle; a faint dragon pattern becomes visible in the paper as shadow moves under the closed door. She turns her eyes toward the door without changing position. The camera tracks slightly right, remaining close. Preserve her face, hair, costume, hands, and the archive layout. No cuts, no new characters, no readable text, no subtitles, no audio.",
+      "fixture_frame": "fixtures/scene_02_start.mock.png",
+      "production_frame": "assets/scene_02_start.png",
+      "expected_outputs": {
+        "vidu": "outputs/vidu_q3_turbo/scene_02.mp4",
+        "wan": "outputs/wan_2_7_i2v/scene_02.mp4"
+      }
+    },
+    {
+      "scene_number": 3,
+      "start_second": 10,
+      "duration_seconds": 5,
+      "script": {
+        "action_zh": "暗门从书架后开启。林月藏起诏书，逆光里一个戴着玉佩的身影抬起头。",
+        "narration_zh": "暗门之后，死去的皇帝现身。",
+        "dialogue": [{"speaker": "林月", "line_zh": "陛下……"}]
+      },
+      "start_frame_spec_en": "Over-shoulder medium shot: Lin Yue in the foreground with her recognizable profile, low braided bun and teal costume; a narrow secret doorway in the archive opens behind her, distant figure only as an unidentifiable silhouette.",
+      "motion_prompt_en": "A single continuous five-second vertical shot in the same fictional Chinese palace archive at night. Lin Yue has an oval face, straight dark brows, almond-shaped dark brown eyes, a small beauty mark below her left eye, black hair in a low braided bun with one narrow pale-jade hairpin, and the same deep teal cross-collar silk hanfu with narrow sleeves and subtle cloud embroidery. From the supplied starting frame, a hidden shelf door opens slowly behind her. She folds the decree against her chest and turns halfway toward the narrow opening. A distant backlit imperial silhouette is visible but its face remains unseen. The camera holds behind her shoulder with a subtle push forward. Preserve her face, hair, costume, hands, and the archive layout. No cuts, no readable text, no subtitles, no audio.",
+      "fixture_frame": "fixtures/scene_03_start.mock.png",
+      "production_frame": "assets/scene_03_start.png",
+      "expected_outputs": {
+        "vidu": "outputs/vidu_q3_turbo/scene_03.mp4",
+        "wan": "outputs/wan_2_7_i2v/scene_03.mp4"
+      }
+    }
+  ]
+}

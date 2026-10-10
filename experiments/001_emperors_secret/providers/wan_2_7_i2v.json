@@ -1,0 +1,15 @@
+{
+  "provider": "wan",
+  "label": "Alibaba Cloud Model Studio Wan 2.7 image-to-video",
+  "endpoint": "https://{WorkspaceId}.ap-southeast-1.maas.aliyuncs.com/api/v1/services/aigc/video-generation/video-synthesis",
+  "region": "Singapore (ap-southeast-1)",
+  "auth_scheme": "Bearer",
+  "key_environment_variable": "DASHSCOPE_API_KEY",
+  "model": "wan2.7-i2v",
+  "duration_seconds": 5,
+  "resolution": "720P",
+  "prompt_extend": false,
+  "watermark": false,
+  "image_binding": "single media item of type first_frame with data:image/png;base64,...",
+  "preview_only": true
+}

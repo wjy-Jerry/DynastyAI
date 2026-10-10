@@ -1,0 +1,14 @@
+{
+  "provider": "vidu",
+  "label": "Vidu Q3 Turbo image-to-video",
+  "endpoint": "https://api.vidu.com/ent/v2/img2video",
+  "auth_scheme": "Token",
+  "key_environment_variable": "VIDU_API_KEY",
+  "model": "viduq3-turbo",
+  "duration_seconds": 5,
+  "resolution": "720p",
+  "audio": false,
+  "off_peak": false,
+  "image_binding": "single first frame as data:image/png;base64,...",
+  "preview_only": true
+}
